@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>İp dartma — Sosial siyasət və insan haqları</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --p1:#1f4fd8;
+  --p2:#e63f5f;
+  --ink:#14213d;
+  --sky:#dff1ff;
+  --grass:#3a9d5d;
+  --grass2:#348f54;
+  --sun:#ffd23f;
+  --ok:#1b8a3a;
+  --bad:#c1121f;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:"Nunito",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  background:var(--sky);
+  color:var(--ink);
+  min-height:100vh;
+  -webkit-tap-highlight-color:transparent;
+}
+.screen{max-width:1100px;margin:0 auto;padding:16px}
+.hidden{display:none !important}
+button{font-family:inherit}
+:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+
+/* ---------- Setup ---------- */
+h1{font-size:clamp(26px,5vw,42px);margin:8px 0 4px;font-weight:900;line-height:1.1}
+.sub{margin:0 0 16px;font-weight:700;opacity:.8}
+.rules{background:#fff;border-radius:14px;padding:12px 16px;margin-bottom:16px;font-weight:700;line-height:1.5;border:2px solid var(--ink)}
+.rules b{font-weight:900}
+.setupGrid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.pcard{background:#fff;border-radius:16px;padding:16px;box-shadow:0 3px 0 var(--ink);border:2px solid var(--ink);border-top:10px solid var(--c)}
+.pcard.p0{--c:var(--p1)}
+.pcard.p1{--c:var(--p2)}
+.pcard h2{margin:0 0 10px;font-size:20px;font-weight:900}
+.pcard .preview{font-size:64px;line-height:1;text-align:center;margin:6px 0 10px;min-height:70px}
+.pcard input{width:100%;font:inherit;font-weight:800;padding:10px 12px;border:2px solid var(--ink);border-radius:10px;margin-bottom:10px}
+.emojiGrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:12px}
+.emojiGrid button{font-size:28px;line-height:1;padding:8px 0;background:#f4f8fc;border:2px solid transparent;border-radius:10px;cursor:pointer}
+.emojiGrid button:hover:not(:disabled){border-color:var(--c)}
+.emojiGrid button.sel{background:var(--c);border-color:var(--ink)}
+.emojiGrid button:disabled{opacity:.25;cursor:not-allowed}
+.emojiGrid button.sel:disabled{opacity:1}
+.readyBtn{width:100%;font-size:18px;font-weight:900;padding:12px;border:2px solid var(--ink);border-radius:12px;background:var(--sun);color:var(--ink);cursor:pointer}
+.readyBtn:disabled{background:#e5e9ee;color:#7b8794;cursor:not-allowed}
+.readyBtn.on{background:#2fbf71;color:#fff}
+.history{margin-top:16px;background:#fff;border:2px solid var(--ink);border-radius:14px;padding:12px 16px}
+.history h3{margin:0 0 8px}
+.history ul{margin:0;padding-left:20px;font-weight:700;line-height:1.7}
+
+/* ---------- Game ---------- */
+.topbar{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;margin-bottom:10px}
+.score{display:flex;align-items:center;gap:10px;background:#fff;border:2px solid var(--ink);border-radius:14px;padding:8px 12px;border-left:10px solid var(--c);min-width:0}
+.score.s0{--c:var(--p1)}
+.score.s1{--c:var(--p2);flex-direction:row-reverse;border-left:2px solid var(--ink);border-right:10px solid var(--c);text-align:right}
+.score .em{font-size:40px;line-height:1}
+.score .nm{font-weight:800;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:22vw}
+.score .pt{font-size:34px;font-weight:900;line-height:1}
+.mid{text-align:center;font-weight:800}
+.mid .big{font-size:20px;font-weight:900}
+.mid .small{font-size:12px;opacity:.7}
+.iconBtn{border:2px solid var(--ink);background:#fff;border-radius:10px;padding:4px 10px;font-weight:800;cursor:pointer;margin:4px 2px 0}
+
+.stage{
+  position:relative;height:150px;border-radius:16px;overflow:hidden;border:2px solid var(--ink);
+  background:repeating-linear-gradient(90deg,var(--grass) 0 60px,var(--grass2) 60px 120px);
+  margin-bottom:10px;
+}
+.centerLine{position:absolute;left:50%;top:0;bottom:0;border-left:4px dashed rgba(255,255,255,.85);transform:translateX(-2px)}
+.ropeWrap{position:absolute;inset:0;transition:transform .7s cubic-bezier(.3,1.4,.5,1)}
+.rope{position:absolute;left:22%;width:56%;top:58%;height:10px;border-radius:6px;
+  background:repeating-linear-gradient(45deg,#c8975a 0 6px,#a8763c 6px 12px);border:1px solid #6b4a22}
+.flag{position:absolute;left:50%;top:58%;transform:translate(-30%,-95%);font-size:34px;line-height:1}
+.avatar{position:absolute;top:58%;font-size:46px;line-height:1;transform:translate(-50%,-75%);transform-origin:50% 90%}
+.avatar.a0{left:22%}
+.avatar.a1{left:78%}
+.avatar.tug{animation:tug .7s ease}
+.avatar.a1.tug{animation-name:tug2}
+@keyframes tug{0%{transform:translate(-50%,-75%) rotate(0)}30%{transform:translate(-50%,-80%) rotate(-18deg) scale(1.2)}100%{transform:translate(-50%,-75%) rotate(0)}}
+@keyframes tug2{0%{transform:translate(-50%,-75%) rotate(0)}30%{transform:translate(-50%,-80%) rotate(18deg) scale(1.2)}100%{transform:translate(-50%,-75%) rotate(0)}}
+
+.qbox{background:#fff;border:2px solid var(--ink);border-radius:16px;padding:14px 16px;margin-bottom:10px}
+.qtext{font-size:clamp(18px,2.6vw,26px);font-weight:900;line-height:1.3;min-height:2.6em;display:flex;align-items:center}
+.timerRow{display:flex;align-items:center;gap:10px;margin-top:10px}
+.timer{flex:1;height:16px;background:#eef2f6;border-radius:99px;overflow:hidden;border:2px solid var(--ink)}
+.bar{height:100%;width:100%;background:var(--sun);transition:width .1s linear}
+.bar.low{background:#ff5a36}
+#timeNum{font-weight:900;font-size:22px;width:34px;text-align:right}
+#status{margin-top:8px;font-weight:800;min-height:1.4em}
+
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.side{background:rgba(255,255,255,.55);border-radius:16px;padding:10px;border:2px dashed var(--c)}
+.side.s0{--c:var(--p1)}
+.side.s1{--c:var(--p2)}
+.side h3{margin:0 0 8px;display:flex;align-items:center;gap:8px;font-size:17px;font-weight:900}
+.side h3 .em{font-size:26px}
+.opt{
+  display:flex;gap:10px;align-items:center;width:100%;text-align:left;
+  border:3px solid var(--c);background:#fff;color:var(--ink);border-radius:12px;
+  padding:10px 12px;margin-bottom:8px;min-height:56px;
+  font-size:clamp(14px,1.8vw,18px);font-weight:800;line-height:1.25;cursor:pointer;touch-action:manipulation;
+  user-select:none;-webkit-user-select:none;
+}
+.opt:active:not(:disabled){transform:scale(.98)}
+.opt .key{flex:0 0 auto;width:32px;height:32px;border-radius:8px;background:var(--c);color:#fff;display:grid;place-items:center;font-weight:900}
+.opt.wrong{background:#ffe3e3;border-color:var(--bad);opacity:.75}
+.opt.wrong .txt{text-decoration:line-through}
+.opt.correct{background:#d8f5df;border-color:var(--ok);opacity:1}
+.opt:disabled{cursor:not-allowed}
+.opt:disabled:not(.wrong):not(.correct){opacity:.55}
+.answers.done .opt{pointer-events:none}
+
+/* ---------- Overlays ---------- */
+.overlay{position:fixed;inset:0;background:rgba(20,33,61,.82);display:grid;place-items:center;z-index:50;padding:16px}
+.modal{background:#fff;border:3px solid var(--ink);border-radius:20px;padding:24px;max-width:480px;width:100%;text-align:center}
+.modal .bigEm{font-size:96px;line-height:1}
+.modal h2{margin:8px 0 4px;font-size:30px;font-weight:900}
+.modal p{font-weight:800;margin:4px 0 14px;font-size:18px}
+.modal .btns{display:grid;gap:10px}
+.modal button{font-size:17px;font-weight:900;padding:12px;border-radius:12px;border:2px solid var(--ink);background:var(--sun);color:var(--ink);cursor:pointer}
+.modal button.alt{background:#fff}
+.count{font-size:min(40vw,220px);font-weight:900;color:#fff;text-shadow:0 6px 0 var(--ink)}
+.confetti{position:fixed;top:-40px;font-size:28px;z-index:60;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(540deg)}}
+
+@media (max-width:720px){
+  .screen{padding:10px}
+  .setupGrid{grid-template-columns:1fr}
+  .stage{height:120px}
+  .avatar{font-size:36px}
+  .flag{font-size:26px}
+  .score .em{font-size:30px}
+  .score .pt{font-size:26px}
+  .score .nm{font-size:13px;max-width:20vw}
+  .answers{gap:8px}
+  .side{padding:6px}
+  .side h3{font-size:14px}
+  .side h3 .em{font-size:20px}
+  .opt{padding:8px;gap:6px;min-height:52px}
+  .opt .key{width:24px;height:24px;font-size:13px}
+  .hint{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  .ropeWrap{transition:none}
+  .avatar.tug{animation:none}
+  .confetti{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ SETUP ============ -->
+<section id="setup" class="screen">
+  <h1>🪢 İp dartma</h1>
+  <p class="sub">Sosial siyasət: insan haqları və beynəlxalq hüquqi əsaslar — 60 suallıq bilik duelləri</p>
+
+  <div class="rules">
+    <b>Qaydalar:</b> hər duel <b>5 sualdan</b> ibarətdir, hər suala <b>15 saniyə</b> verilir.
+    Düzgün cavabı <b>birinci basan</b> xal qazanır və ipi öz tərəfinə çəkir.
+    Səhv cavab verən həmin sualda bloklanır, rəqib isə cavab verməyə davam edə bilər.
+    Bərabərlik olarsa “qızıl sual” verilir.
+    <div class="hint" style="margin-top:6px">Klaviatura: sol oyunçu <b>A S D F</b>, sağ oyunçu <b>H J K L</b>. Telefon və planşetdə hər kəs öz tərəfindəki düymələrə toxunur.</div>
+  </div>
+
+  <div class="setupGrid">
+    <div class="pcard p0">
+      <h2>Oyunçu 1</h2>
+      <div class="preview" id="prev0">❔</div>
+      <input id="name0" maxlength="14" placeholder="Adınızı yazın" autocomplete="off">
+      <div class="emojiGrid" id="grid0"></div>
+      <button class="readyBtn" id="ready0" disabled>Emoji seç</button>
+    </div>
+    <div class="pcard p1">
+      <h2>Oyunçu 2</h2>
+      <div class="preview" id="prev1">❔</div>
+      <input id="name1" maxlength="14" placeholder="Adınızı yazın" autocomplete="off">
+      <div class="emojiGrid" id="grid1"></div>
+      <button class="readyBtn" id="ready1" disabled>Emoji seç</button>
+    </div>
+  </div>
+
+  <div class="history hidden" id="history">
+    <h3>Duel nəticələri</h3>
+    <ul id="historyList"></ul>
+  </div>
+</section>
+
+<!-- ============ GAME ============ -->
+<section id="game" class="screen hidden">
+  <div class="topbar">
+    <div class="score s0"><span class="em" id="em0"></span><div><div class="nm" id="nm0"></div><div class="pt" id="pt0">0</div></div></div>
+    <div class="mid">
+      <div class="big" id="duelNo">Duel 1</div>
+      <div id="qLabel">Sual 1/5</div>
+      <div class="small" id="poolInfo"></div>
+      <button class="iconBtn" id="muteBtn" aria-label="Səsi aç/bağla">🔊</button>
+      <button class="iconBtn" id="quitBtn">Çıxış</button>
+    </div>
+    <div class="score s1"><span class="em" id="em1"></span><div><div class="nm" id="nm1"></div><div class="pt" id="pt1">0</div></div></div>
+  </div>
+
+  <div class="stage" id="stage" aria-hidden="true">
+    <div class="centerLine"></div>
+    <div class="ropeWrap" id="ropeWrap">
+      <div class="rope"></div>
+      <div class="flag">🚩</div>
+      <div class="avatar a0" id="av0"></div>
+      <div class="avatar a1" id="av1"></div>
+    </div>
+  </div>
+
+  <div class="qbox">
+    <div class="qtext" id="qtext"></div>
+    <div class="timerRow">
+      <div class="timer"><div class="bar" id="bar"></div></div>
+      <div id="timeNum">15</div>
+    </div>
+    <div id="status" aria-live="polite"></div>
+  </div>
+
+  <div class="answers" id="answers">
+    <div class="side s0">
+      <h3><span class="em" id="sem0"></span><span id="snm0"></span></h3>
+      <div id="opts0"></div>
+    </div>
+    <div class="side s1">
+      <h3><span class="em" id="sem1"></span><span id="snm1"></span></h3>
+      <div id="opts1"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ OVERLAYS ============ -->
+<div class="overlay hidden" id="countOverlay"><div class="count" id="countNum">3</div></div>
+
+<div class="overlay hidden" id="resultOverlay">
+  <div class="modal">
+    <div class="bigEm" id="resEm"></div>
+    <h2 id="resTitle"></h2>
+    <p id="resScore"></p>
+    <div class="btns">
+      <button id="againBtn">Eyni oyunçularla yenidən</button>
+      <button class="alt" id="newBtn">Yeni duel (yeni oyunçular)</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =====================================================
+   SUAL BANKI — 60 sual (4cü mövzu: sosial siyasət və insan haqları)
+   Format: [sual, DÜZGÜN cavab, səhv1, səhv2, səhv3]
+   Variantların yeri hər sualda təsadüfi qarışdırılır.
+   ===================================================== */
+const QS = [
+["Mövzuya görə dövlətin sosial siyasəti nəyi nəzərə almalıdır?","İnsanların öz problemlərini həll etmə imkanlarını və dövlət yardımlarını","Yalnız dövlət yardımlarını","Yalnız bazar mexanizmlərini","Yalnız beynəlxalq təşkilatların tövsiyələrini"],
+["Dövlət idarəetməyə həddən artıq önəm verib insanın rolunu görməzdən gəlsə nə baş verə bilər?","İnsanlar dövlətdən asılı hala gəlir, məsuliyyət hissi zəifləyir","Vətəndaş fəallığı güclənir","Yerli icmalar gücləndirilir","İqtisadi artım sürətlənir"],
+["Effektiv sosial siyasətin prinsiplərindən biri hansıdır?","İqtisadi effektivlik və sosial ədalət","Yalnız mərkəzləşmə","Yalnız xeyriyyəçilik","Rəqabətin məhdudlaşdırılması"],
+["Birinci prinsipin (iqtisadi effektivlik və sosial ədalət) reallaşdırılmasının çətinliyi nədədir?","Ədalət iqtisadi imkanlarla, effektivlik isə ədalət prinsipləri ilə çox vaxt uyğunlaşmır","Dövlət büdcəsi mövcud deyil","İnsanlar sosial yardım istəmir","Beynəlxalq hüquq buna icazə vermir"],
+["Sosial müdafiə, yardım və özünəyardım prinsipinə görə sosial siyasət nəyə əsaslanmalıdır?","Yardıma ehtiyacı olanların fəallığına","Yalnız dövlətin maliyyə imkanlarına","Yalnız xeyriyyəçilərin köməyinə","Yalnız beynəlxalq qurumların nəzarətinə"],
+["Subsidiarlıq prinsipinə görə yerli problemlər necə həll edilməlidir?","Mümkün qədər yerli səviyyədə","Yalnız mərkəzi hökumət tərəfindən","Yalnız BMT tərəfindən","Yalnız məhkəmə qərarı ilə"],
+["Subsidiarlıq prinsipində daha böyük dövlət orqanları nə vaxt müdaxilə etməlidir?","Yalnız zəruri hallarda","Həmişə və hər problemdə","Heç vaxt","Yalnız seçki dövründə"],
+["Aşağıdakılardan hansı insanın “ali” ehtiyaclarına aiddir?","Ədalət, xeyirxahlıq, gözəllik, həqiqət","Qida və geyim","Mənzil və təhlükəsizlik","Pul və var-dövlət"],
+["İnsan haqlarının universallığı nə deməkdir?","Onlardan ayrıseçkilik olmadan bütün insanlar faydalana bilər","Yalnız vətəndaşlara aiddir","Yalnız yetkinlərə aiddir","Yalnız demokratik ölkələrdə qüvvədədir"],
+["Şəxsin hüquqları nə vaxt məhdudlaşdırıla bilər?","Onların həyata keçirilməsi digər şəxslərin hüquqlarını məhdudlaşdırdıqda","Dövlət istədikdə","Çox xərc tələb etdikdə","Seçki dövründə"],
+["İnsan haqları konsepsiyası konseptual formada hansı əsrdə təşəkkül tapıb?","XVIII əsr","XVI əsr","XIX əsr","XX əsr"],
+["XVIII əsrdə insan haqları konsepsiyalarının işlənməsinə hansı hüquqların müdafiəsi təkan verdi?","Vətəndaş və siyasi hüquqlar","İqtisadi hüquqlar","Mədəni hüquqlar","Ekoloji hüquqlar"],
+["Hazırda daha çox nüfuz qazanan ümumbəşəri hüquqlar hansılardır?","Sülh, inkişaf və təmiz ətraf mühit hüquqları","Yalnız mülkiyyət hüququ","Yalnız seçki hüququ","Yalnız ticarət azadlığı"],
+["Hansı hüquqların inkişafı vətəndaş və siyasi hüquqlardan daha yavaş irəliləmişdir?","İqtisadi, sosial və mədəni hüquqlar","Seçki hüquqları","Söz azadlığı","Toplaşmaq azadlığı"],
+["Demokratik sistemlərdə səsvermə hüququ əvvəlcə kimlərə verildi?","Orta və fəhlə siniflərinə","Qadınlara","Gənclərə","Yalnız aristokratlara"],
+["İlkin mərhələdə sosial problemlərin həlli kimlərdən asılı idi?","Xeyriyyəçilik fəaliyyəti ilə məşğul olan ayrı-ayrı şəxslərdən","Beynəlxalq təşkilatlardan","Sığorta şirkətlərindən","Dövlət qurumlarından"],
+["Kollektiv məsuliyyət konsepsiyasının inkişafı nəyin yaranmasına səbəb oldu?","Müxtəlif sığorta sistemlərinin","Millətlər Liqasının","Mülki məhkəmələrin","Ümumdünya Bəyannaməsinin"],
+["Transfert ödənişləri kimlərə dəstək məqsədilə həyata keçirilir?","Cəmiyyətin zəif qruplarına (yoxsul, xəstə, yaşlı)","Yalnız dövlət qulluqçularına","Ən varlı təbəqəyə","Yalnız iş adamlarına"],
+["Fərdi tədbirlərin effektiv olmadığı anlaşıldıqdan sonra hansı konsepsiya inkişaf etməyə başladı?","Mütəşəkkil sosial təminat konsepsiyası","Fərdi xeyriyyəçilik konsepsiyası","İnqilab konsepsiyası","Subsidiarlıq konsepsiyası"],
+["Birinci Dünya müharibəsindən sonra hansı təşkilatlar yaradıldı?","Millətlər Liqası və Beynəlxalq Əmək Təşkilatı","BMT və YUNESKO","Ümumdünya Səhiyyə Təşkilatı və BMT","Avropa Şurası və NATO"],
+["Ümumdünya İnsan Hüquqları Bəyannaməsi neçənci ildə qəbul olunub?","1948","1919","1966","1989"],
+["İkinci Dünya müharibəsindən sonra beynəlxalq icma nə qərara gəldi?","Bir ölkədə insan haqları təhlükə altında olduqda laqeyd qalmamağa","Ölkələrin daxili işlərinə heç vaxt qarışmamağa","İnsan haqlarını yalnız regional səviyyədə müdafiə etməyə","Sosial siyasəti ləğv etməyə"],
+["Yaşamaq hüququ nəyi nəzərdə tutur?","Heç kəs həyatdan məhrum edilə bilməz","Hər kəs istədiyi yerdə yaşaya bilər","Hər kəsə mənzil verilməlidir","Dövlət ömür uzunluğunu təmin edir"],
+["“Bütün insanlar azad doğulurlar” prinsipi Bəyannamənin hansı maddələrində elan edilir?","İlk iki maddəsində","Son iki maddəsində","28-ci maddəsində","Yalnız preambulada"],
+["Azadlıq hüququ hansı prinsiplə məhdudlaşır?","Digər şəxslərin də azadlıq hüququna hörmət prinsipi ilə","Dövlətin istəyi ilə","Yaş həddi ilə","Qonşuların razılığı ilə"],
+["Ayrıseçkilik nə deməkdir?","Dar qrupun və ya şəxslərin maraqlarına uyğun olaraq bəzilərinin hüquqdan məhrum edilməsi","Bütün insanların bərabər hüquqlandırılması","Hüquqların universallığı","Sosial müdafiənin genişləndirilməsi"],
+["Ayrıseçkilik üçün yaranan yeni bəhanələrə misal kimi hansı göstərilir?","Cinsi oriyentasiya meylləri və QİÇS virusunun yayılması","Yalnız irq fərqi","Yalnız dil fərqi","Yalnız din fərqi"],
+["Sosial ədalət nə deməkdir?","İnsan ehtiyaclarının təmin olunması və resursların ədalətli bölüşdürülməsi","Hamıya eyni gəlirin verilməsi","Dövlətin iqtisadi müdaxiləsinin dayandırılması","Cəza sisteminin sərtləşdirilməsi"],
+["Həmrəyliyin mahiyyəti nədədir?","Yalnız mərhəmət deyil, həm də başqalarının maraqları uğrunda mübarizədə iştirakdır","Yalnız maddi yardım göstərməkdir","Yalnız rəqabət aparmaqdır","Yalnız dövlətə güvənməkdir"],
+["Sosial məsuliyyət nədir?","Sosial cəhətdən həssas və hüquqları tapdalanmış qrupların maraqlarını qorumağa yönəlmiş fəaliyyət","Yalnız vergi ödəmək öhdəliyi","Dövlətin məsuliyyətsizliyi","Yalnız fərdi qazanc əldə etmək"],
+["Sosial məsuliyyət həmrəyliyin nəyidir?","Praktiki tərəfi","Nəzəri əsası","Əks qütbü","Hüquqi sanksiyası"],
+["Münaqişələrin sülh yolu ilə həlli hansı yanaşmanı ifadə edir?","Konstruktiv yanaşmanı","Destruktiv yanaşmanı","İnqilabi yanaşmanı","Passiv yanaşmanı"],
+["Təkamül yanaşmasının üstünlüyü nədir?","Daha yavaş irəliləsə də, uzunmüddətli perspektivdə daha etibarlı və effektivdir","Ən sürətli və qəti nəticə verir","Silahlı mübarizəyə əsaslanır","Mövcud strukturları tamamilə dağıdır"],
+["XXI əsrdə ekoloji problemlərə dair müzakirələr yalnız ətraf mühitin müdafiəsi ilə deyil, həm də nə ətrafında aparılır?","İnsanların ekoloji tərbiyəsi","Sənaye istehsalının artırılması","Şəhərləşmənin sürətləndirilməsi","Beynəlxalq ticarətin liberallaşdırılması"],
+["Avropa Şurasında müqavilələrin qəbul edilməsi nə vaxt mümkündür?","Yalnız o təşkilatın üzvü olmaqla","İstənilən dövlət üçün açıqdır","Yalnız BMT üzvləri üçün","Yalnız qonşu dövlətlər üçün"],
+["“İnsan hüquqları haqqında Bill”i nələr təşkil edir?","Ümumdünya Bəyannaməsi və iki beynəlxalq pakt","Yalnız Ümumdünya Bəyannaməsi","Beş əsas konvensiya","Avropa Konvensiyası və BƏT konvensiyaları"],
+["Birinci qrup hüquqlar (Bəyannamənin 2-21-ci maddələri) nəyi nəzərdə tutur?","İnsanın azadlığını istənilən məhdudiyyətlərdən qorumağı","Ehtiyacdan azadlığı","Mədəni həyatda iştirakı","Sosial və beynəlxalq mühit hüququnu"],
+["Bəyannamənin 28-ci maddəsində (üçüncü qrup) nə ifadə olunur?","Hüquq və azadlıqların tam həyata keçirilməsi üçün lazım olan sosial və beynəlxalq mühit hüququ","Yaşamaq hüququ","Söz azadlığı","Əmlak toxunulmazlığı"],
+["Mülki və siyasi hüquqlar haqqında Pakt və İqtisadi, sosial və mədəni hüquqlar haqqında Pakt neçənci ildə qəbul edilib?","1966","1948","1979","1995"],
+["Yaşamaq, azadlıq və şəxsi toxunulmazlıq hüququ Mülki və siyasi hüquqlar Paktının hansı maddəsində yer alır?","Maddə 6","Maddə 12","Maddə 18","Maddə 27"],
+["Qadınlara qarşı ayrı-seçkiliyin bütün formalarının aradan qaldırılması üzrə Konvensiya neçənci ildə qəbul edilib?","1979","1966","1984","1990"],
+["Bütün miqrant işçilərin və onların ailə üzvlərinin hüquqlarının qorunması haqqında Konvensiya neçənci ildə qəbul edilib?","1990","1979","1989","1969"],
+["“Sosial tərəqqi və inkişaf bəyannaməsi” neçənci ildə BMT Baş Assambleyası tərəfindən qəbul edilib?","1969","1948","1987","1995"],
+["Sosial tərəqqi və inkişafın məqsədi nədir?","Cəmiyyətin bütün üzvlərinin maddi və mənəvi həyat səviyyəsinin daim artırılması","Yalnız iqtisadi artımın təmin edilməsi","Yalnız dövlət xərclərinin azaldılması","Yalnız silahlanmanın gücləndirilməsi"],
+["BMT Beynəlxalq əlillər onilliyi hansı illəri əhatə edir?","1983-1992","1976-1985","1974-1994","1985-1995"],
+["1987-ci ilin sentyabrında Vyanada keçirilən Regionlararası Məsləhət Müşavirəsində neçə ölkə iştirak edib?","90","50","120","190"],
+["Vyana müşavirəsində hansı sənəd qəbul edilib?","Sosial təminat siyasəti və proqramlarının “Rəhbər prinsipləri”","Ümumdünya İnsan Hüquqları Bəyannaməsi","Uşaq hüquqları haqqında Konvensiya","Millətlər Liqasının Nizamnaməsi"],
+["Vyana müşavirəsində sosial siyasətin hansı keyfiyyətinin vacibliyi vurğulanıb?","Yeni problemlərin həllində daha çevik olmasının","Daha sərt və mərkəzləşmiş olmasının","Yalnız qadağalara əsaslanmasının","İnkişafa maneə yaratmasının"],
+["Yüksək Səviyyədə Ümumdünya Görüşü Kopenhagendə neçənci ildə keçirilib?","1995","1987","1969","1976"],
+["Kopenhagen görüşündə qeyd edildiyinə görə, neçə milyard insan yoxsulluq səviyyəsindən aşağı yaşayır?","1,3 milyard","1 milyard","1,5 milyard","2 milyard"],
+["Kopenhagen fəaliyyət proqramında sosial inkişafın prioritet məqsədlərinə hansılar daxildir?","Fərdin sosial müdafiəsi, sosial inteqrasiyaya yardım və sosial sülhün dəstəklənməsi","Yalnız hərbi qüdrətin artırılması","Yalnız xarici borcların artırılması","Yalnız ticarət məhdudiyyətləri"],
+["ÜST abreviaturası hansı təşkilatı bildirir?","Ümumdünya Səhiyyə Təşkilatı","Ümumdünya Sosial Təşkilat","Ümumdünya Sülh Təşkilatı","Ümumdünya Statistika Təşkilatı"],
+["Beynəlxalq Əmək Təşkilatı (BƏT) neçənci ildən fəaliyyət göstərir?","1919","1945","1948","1966"],
+["BƏT sosial-əmək sferasında neçədən çox konvensiya qəbul edib?","170","70","100","250"],
+["YUNESKO hansı sahələrdə insan hüquqlarını qlobal səviyyədə formalaşdırır?","Təhsil, elm, mədəniyyət və informasiya","Maliyyə və bankçılıq","Hərbi və müdafiə","Nəqliyyat və energetika"],
+["Aşağıdakılardan hansı regional müqavilədir?","Afrika Birliyi Təşkilatının Xartiyası","Mülki və siyasi hüquqlar haqqında Beynəlxalq Pakt","Uşaq hüquqları haqqında Konvensiya","Ümumdünya İnsan Hüquqları Bəyannaməsi"],
+["BMT-də neçə növ nəzarət mexanizmi fəaliyyət göstərir?","İki (institusional və konvensional)","Bir","Üç","Beş"],
+["Aşağıdakılardan hansı BMT-nin konvensional orqanıdır?","Uşaq Hüquqları Komitəsi","Baş Assambleya","İqtisadi və Sosial Şura","Ali Komissarın İdarəsi"],
+["Azərbaycan Konstitusiyasının hansı maddəsi beynəlxalq hüququn üstünlüyünü qəbul edir?","151-ci maddə","12-ci maddə","25-ci maddə","71-ci maddə"],
+["Azərbaycan Respublikasının hazırkı Konstitusiyası neçənci ildə qəbul edilib?","1995","1991","1978","2002"]
+];
+
+const EMOJIS = ["😀","😎","🤓","🦁","🐯","🐼","🦊","🐸","🐵","🦄","🐲","🤖","👽","🦸","🧙","🥷","🐧","🦉","🐙","🦖"];
+const KEYS = [["A","S","D","F"],["H","J","K","L"]];
+const KEYMAP = {KeyA:[0,0],KeyS:[0,1],KeyD:[0,2],KeyF:[0,3],KeyH:[1,0],KeyJ:[1,1],KeyK:[1,2],KeyL:[1,3]};
+const TIME_LIMIT = 15;
+const DUEL_LEN = 5;
+const MAX_EXTRA = 3;
+
+const $ = s => document.querySelector(s);
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+/* ---------- Sual növbəsi ---------- */
+let order = shuffle(QS.map((_,i)=>i)), ptr = 0;
+function nextQuestion(){
+  if(ptr >= order.length){ order = shuffle(QS.map((_,i)=>i)); ptr = 0; }
+  return QS[order[ptr++]];
+}
+
+/* ---------- Səs ---------- */
+let ac = null, muted = false;
+function sfx(type){
+  if(muted) return;
+  try{
+    ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+    const notes = {ok:[660,880], bad:[240,170], win:[523,784], tick:[500,500]}[type];
+    const o = ac.createOscillator(), gn = ac.createGain();
+    o.type = type === "bad" ? "sawtooth" : "triangle";
+    o.connect(gn); gn.connect(ac.destination);
+    const t = ac.currentTime;
+    o.frequency.setValueAtTime(notes[0], t);
+    o.frequency.setValueAtTime(notes[1], t + .12);
+    gn.gain.setValueAtTime(.18, t);
+    gn.gain.exponentialRampToValueAtTime(.001, t + .35);
+    o.start(t); o.stop(t + .36);
+  }catch(e){}
+}
+
+/* ---------- Oyunçular və qurulum ---------- */
+const players = [{name:"",emoji:null,ready:false},{name:"",emoji:null,ready:false}];
+const history = [];
+let duelNo = 0;
+
+function buildSetup(){
+  for(let p=0;p<2;p++){
+    const grid = $("#grid"+p);
+    grid.innerHTML = "";
+    EMOJIS.forEach(em=>{
+      const b = document.createElement("button");
+      b.type = "button"; b.textContent = em; b.dataset.em = em;
+      b.setAttribute("aria-label","Emoji "+em);
+      b.addEventListener("click",()=>pickEmoji(p,em));
+      grid.appendChild(b);
+    });
+    $("#name"+p).value = "";
+    $("#name"+p).disabled = false;
+    $("#prev"+p).textContent = "❔";
+    players[p] = {name:"",emoji:null,ready:false};
+    const r = $("#ready"+p);
+    r.disabled = true; r.textContent = "Emoji seç"; r.classList.remove("on");
+  }
+  refreshSetup();
+}
+function pickEmoji(p,em){
+  if(players[p].ready) return;
+  if(players[1-p].emoji === em) return;
+  players[p].emoji = em;
+  $("#prev"+p).textContent = em;
+  const r = $("#ready"+p);
+  r.disabled = false; r.textContent = "Hazıram!";
+  refreshSetup();
+}
+function refreshSetup(){
+  for(let p=0;p<2;p++){
+    $("#grid"+p).querySelectorAll("button").forEach(b=>{
+      const em = b.dataset.em;
+      b.classList.toggle("sel", players[p].emoji === em);
+      b.disabled = players[p].ready || (players[1-p].emoji === em);
+    });
+  }
+}
+function toggleReady(p){
+  const pl = players[p];
+  if(!pl.emoji) return;
+  pl.ready = !pl.ready;
+  const r = $("#ready"+p);
+  r.classList.toggle("on", pl.ready);
+  r.textContent = pl.ready ? "✓ Hazırdır (ləğv et)" : "Hazıram!";
+  $("#name"+p).disabled = pl.ready;
+  refreshSetup();
+  if(players[0].ready && players[1].ready){
+    for(let i=0;i<2;i++){
+      players[i].name = $("#name"+i).value.trim() || ("Oyunçu "+(i+1));
+    }
+    setTimeout(()=>{ if(players[0].ready && players[1].ready) startDuel(); }, 350);
+  }
+}
+$("#ready0").addEventListener("click",()=>toggleReady(0));
+$("#ready1").addEventListener("click",()=>toggleReady(1));
+
+function renderHistory(){
+  const box = $("#history"), list = $("#historyList");
+  list.innerHTML = "";
+  if(!history.length){ box.classList.add("hidden"); return; }
+  box.classList.remove("hidden");
+  history.forEach(h=>{
+    const li = document.createElement("li");
+    li.textContent = `Duel ${h.n}: ${h.a} ${h.sa} : ${h.sb} ${h.b} — ${h.w}`;
+    list.appendChild(li);
+  });
+}
+
+function show(id){
+  ["setup","game"].forEach(s=>$("#"+s).classList.toggle("hidden", s!==id));
+  window.scrollTo(0,0);
+}
+
+/* ---------- Oyun ---------- */
+let g = null;
+const nm = p => players[p].name;
+function later(fn, ms){ const ref = g; setTimeout(()=>{ if(g === ref && g) fn(); }, ms); }
+
+function startDuel(){
+  duelNo++;
+  g = {scores:[0,0], round:0, locked:[false,false], resolved:true, cur:null, timer:null, t0:0};
+  for(let p=0;p<2;p++){
+    $("#em"+p).textContent = players[p].emoji;
+    $("#nm"+p).textContent = players[p].name;
+    $("#av"+p).textContent = players[p].emoji;
+    $("#sem"+p).textContent = players[p].emoji;
+    $("#snm"+p).textContent = players[p].name + "  (" + KEYS[p].join(" ") + ")";
+    $("#pt"+p).textContent = "0";
+  }
+  $("#resultOverlay").classList.add("hidden");
+  $("#duelNo").textContent = "Duel " + duelNo;
+  $("#qLabel").textContent = "Hazır olun…";
+  $("#qtext").textContent = "";
+  $("#status").textContent = "";
+  $("#opts0").innerHTML = ""; $("#opts1").innerHTML = "";
+  $("#bar").style.width = "100%"; $("#bar").classList.remove("low");
+  $("#timeNum").textContent = TIME_LIMIT;
+  updateRope();
+  updatePool();
+  show("game");
+  countdown(()=>nextRound());
+}
+
+function countdown(done){
+  const ov = $("#countOverlay"), n = $("#countNum");
+  const seq = ["3","2","1","Başla!"];
+  let i = 0;
+  const ref = g;
+  ov.classList.remove("hidden");
+  (function step(){
+    if(g !== ref){ ov.classList.add("hidden"); return; }
+    if(i >= seq.length){ ov.classList.add("hidden"); done(); return; }
+    n.textContent = seq[i];
+    n.style.fontSize = seq[i] === "Başla!" ? "min(22vw,120px)" : "";
+    sfx("tick");
+    i++;
+    setTimeout(step, 750);
+  })();
+}
+
+function updatePool(){
+  $("#poolInfo").textContent = "Bankda qalan: " + (order.length - ptr) + "/" + QS.length;
+}
+
+function roundLabel(){
+  if(g.round <= DUEL_LEN) return "Sual " + g.round + "/" + DUEL_LEN;
+  return "⭐ Qızıl sual " + (g.round - DUEL_LEN) + "/" + MAX_EXTRA;
+}
+
+function nextRound(){
+  g.round++;
+  const q = nextQuestion();
+  const pos = shuffle([0,1,2,3]);            // pos[k] = orijinal variant indeksi
+  g.cur = {text:q[0], opts:pos.map(i=>q[1+i]), correct:pos.indexOf(0)};
+  g.locked = [false,false];
+  g.resolved = false;
+
+  $("#qLabel").textContent = roundLabel();
+  $("#qtext").textContent = g.cur.text;
+  $("#status").textContent = "Düzgün cavabı birinci basan xal qazanır!";
+  $("#answers").classList.remove("done");
+  for(let p=0;p<2;p++){
+    const box = $("#opts"+p);
+    box.innerHTML = "";
+    g.cur.opts.forEach((txt,k)=>{
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "opt";
+      b.dataset.p = p; b.dataset.i = k;
+      const key = document.createElement("span"); key.className = "key"; key.textContent = KEYS[p][k];
+      const t = document.createElement("span"); t.className = "txt"; t.textContent = txt;
+      b.append(key,t);
+      box.appendChild(b);
+    });
+  }
+  updatePool();
+  startTimer();
+}
+
+function optBtn(p,i){ return document.querySelector(`#opts${p} .opt[data-i="${i}"]`); }
+
+function startTimer(){
+  stopTimer();
+  const bar = $("#bar"), num = $("#timeNum");
+  bar.classList.remove("low");
+  bar.style.width = "100%"; num.textContent = TIME_LIMIT;
+  g.t0 = performance.now();
+  const ref = g;
+  g.timer = setInterval(()=>{
+    if(g !== ref){ clearInterval(ref.timer); return; }
+    const left = Math.max(0, TIME_LIMIT - (performance.now() - g.t0)/1000);
+    bar.style.width = (left/TIME_LIMIT*100) + "%";
+    num.textContent = Math.ceil(left);
+    bar.classList.toggle("low", left <= 5);
+    if(left <= 0){ stopTimer(); timeUp(); }
+  }, 100);
+}
+function stopTimer(){ if(g && g.timer){ clearInterval(g.timer); g.timer = null; } }
+
+function revealCorrect(){
+  $("#answers").classList.add("done");
+  for(let p=0;p<2;p++){
+    document.querySelectorAll(`#opts${p} .opt`).forEach(b=>{
+      b.disabled = true;
+      if(+b.dataset.i === g.cur.correct) b.classList.add("correct");
+    });
+  }
+}
+
+function press(p,i){
+  if(!g || g.resolved || !g.cur || g.locked[p]) return;
+  if(i === g.cur.correct){
+    g.resolved = true;
+    stopTimer();
+    g.scores[p]++;
+    optBtn(p,i).classList.add("correct");
+    revealCorrect();
+    $("#status").textContent = "✅ " + nm(p) + " birinci düzgün cavabı verdi! İpi özünə tərəf çəkir.";
+    sfx("ok");
+    updateScores();
+    updateRope(p);
+    later(afterRound, 2100);
+  } else {
+    g.locked[p] = true;
+    const b = optBtn(p,i);
+    b.classList.add("wrong");
+    document.querySelectorAll(`#opts${p} .opt`).forEach(x=>{ x.disabled = true; });
+    sfx("bad");
+    if(g.locked[0] && g.locked[1]){
+      g.resolved = true;
+      stopTimer();
+      revealCorrect();
+      $("#status").textContent = "❌ İkisi də səhv cavab verdi — xal verilmir.";
+      later(afterRound, 2300);
+    } else {
+      $("#status").textContent = "❌ " + nm(p) + " səhv etdi — " + nm(1-p) + " cavab verməyə davam edə bilər.";
+    }
+  }
+}
+
+function timeUp(){
+  if(!g || g.resolved) return;
+  g.resolved = true;
+  revealCorrect();
+  $("#status").textContent = "⏰ Vaxt bitdi — xal verilmir.";
+  sfx("bad");
+  later(afterRound, 2300);
+}
+
+function afterRound(){
+  const diff = g.scores[0] - g.scores[1];
+  if(g.round < DUEL_LEN) return nextRound();
+  if(diff !== 0) return finishDuel();
+  if(g.round >= DUEL_LEN + MAX_EXTRA) return finishDuel();
+  nextRound();
+}
+
+function updateScores(){
+  $("#pt0").textContent = g.scores[0];
+  $("#pt1").textContent = g.scores[1];
+}
+function updateRope(scorer){
+  const diff = g.scores[1] - g.scores[0];   // müsbət = ip sağa (Oyunçu 2) çəkilir
+  $("#ropeWrap").style.transform = "translateX(" + (diff*3) + "%)";
+  if(scorer === 0 || scorer === 1){
+    const av = $("#av"+scorer);
+    av.classList.remove("tug"); void av.offsetWidth; av.classList.add("tug");
+  }
+}
+
+function finishDuel(){
+  stopTimer();
+  const [a,b] = g.scores;
+  let em, title;
+  if(a === b){ em = "🤝"; title = "Bərabərlik!"; }
+  else {
+    const w = a > b ? 0 : 1;
+    em = players[w].emoji; title = nm(w) + " qalib gəldi!";
+  }
+  $("#resEm").textContent = em;
+  $("#resTitle").textContent = title;
+  $("#resScore").textContent = nm(0) + " " + a + " : " + b + " " + nm(1);
+  history.push({n:duelNo, a:nm(0), b:nm(1), sa:a, sb:b, w:(a===b?"bərabərlik":(a>b?nm(0):nm(1))+" qalib")});
+  $("#resultOverlay").classList.remove("hidden");
+  sfx("win");
+  if(a !== b) confetti();
+}
+
+function confetti(){
+  if(window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const set = ["🎉","🎊","⭐","🏆","✨"];
+  for(let i=0;i<36;i++){
+    const s = document.createElement("span");
+    s.className = "confetti";
+    s.textContent = set[i % set.length];
+    s.style.left = Math.random()*100 + "vw";
+    s.style.animationDuration = (2.2 + Math.random()*2.2) + "s";
+    s.style.animationDelay = (Math.random()*.8) + "s";
+    document.body.appendChild(s);
+    setTimeout(()=>s.remove(), 6000);
+  }
+}
+
+/* ---------- Əlaqələr ---------- */
+$("#answers").addEventListener("pointerdown", e=>{
+  const b = e.target.closest(".opt");
+  if(!b || b.disabled) return;
+  e.preventDefault();
+  press(+b.dataset.p, +b.dataset.i);
+});
+document.addEventListener("keydown", e=>{
+  if(e.repeat || !g || $("#game").classList.contains("hidden")) return;
+  const m = KEYMAP[e.code];
+  if(m){ e.preventDefault(); press(m[0], m[1]); }
+});
+$("#muteBtn").addEventListener("click", ()=>{
+  muted = !muted;
+  $("#muteBtn").textContent = muted ? "🔇" : "🔊";
+});
+$("#quitBtn").addEventListener("click", ()=>{
+  if(!confirm("Duel dayandırılsın və başlanğıc səhifəyə qayıdılsın?")) return;
+  toSetup();
+});
+$("#againBtn").addEventListener("click", ()=>{ startDuel(); });
+$("#newBtn").addEventListener("click", ()=>{ toSetup(); });
+
+function toSetup(){
+  stopTimer();
+  g = null;
+  $("#countOverlay").classList.add("hidden");
+  $("#resultOverlay").classList.add("hidden");
+  buildSetup();
+  renderHistory();
+  show("setup");
+}
+
+buildSetup();
+</script>
+</body>
+</html>
